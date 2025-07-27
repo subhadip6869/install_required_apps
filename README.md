@@ -4,14 +4,16 @@ A simple PowerShell script to automate the installation of required applications
 
 ## Overview
 
-This repository contains a PowerShell script designed to streamline the setup process for a new Windows environment. By defining a list of essential applications, the script ensures that all required software is installed quickly and efficiently, saving you valuable time.
+This script provides a quick way to set up a new Windows environment by installing essential applications automatically, saving you valuable time.
 
 ## Features
 
+-   **One-command Installation:** Run directly from GitHub
 -   **Automated Application Installation:** Installs a predefined set of applications using PowerShell.
 -   **Customizable:** Easily modify the script to add or remove applications as per your needs.
 -   **User-Friendly:** Minimal user interaction required.
 -   **Repeatable:** Can be used every time you set up a new machine or refresh your environment.
+-   **Admin-friendly:** Handles elevation automatically
 
 ## Prerequisites
 
@@ -19,22 +21,30 @@ This repository contains a PowerShell script designed to streamline the setup pr
 -   PowerShell 5.0 or later
 -   Administrator privileges
 
-## Enabling Script Execution
+## Enabling Script Execution - First-Time Setup
 
 By default, PowerShell restricts the execution of scripts for security reasons. To run this script for the first time, you must change the execution policy:
 
-1. Open PowerShell as **Administrator**.
-2. Run the following command:
+1.  Open PowerShell as **Administrator**.
+2.  Run the following command:
 
     ```powershell
     Set-ExecutionPolicy RemoteSigned
     ```
 
-3. When prompted, type `Y` and press Enter to confirm.
+    This allows you to run local scripts and remote scripts that are digitally signed.
 
-This allows you to run local scripts and remote scripts that are digitally signed.
+## Installation Methods
 
-## Usage
+### Method 1: Direct Run (Recommended)
+
+Run this command in PowerShell:
+
+```bash
+irm https://raw.githubusercontent.com/subhadip6869/install_required_apps/main/windows.ps1 | iex
+```
+
+### Method 2: Manual Download
 
 1. **Clone the Repository:**
 
@@ -45,7 +55,7 @@ This allows you to run local scripts and remote scripts that are digitally signe
 
 2. **Review the Script:**
 
-    - Open the PowerShell script file (e.g., `install_required_apps.ps1`) in your preferred editor.
+    - Open the PowerShell script file (e.g., `windows.ps1`) in your preferred editor.
     - Edit the list of applications as needed.
 
 3. **Run the Script:**
@@ -56,10 +66,31 @@ This allows you to run local scripts and remote scripts that are digitally signe
         ```
     - Follow any prompts that appear.
 
+## How It Works
+
+1.  The script will:
+    -   Automatically request admin privileges if needed
+    -   Install applications via:
+        -   Native installers
+        -   Winget (Windows Package Manager)
+        -   Archive extraction
+2.  You'll see progress updates in the console
+
+## Customization
+
+To modify the application list:
+
+1. Fork this repository
+2. Edit `windows.ps1`
+3. Change the `$softwareList`, `$wingetList`, or `$archievedSoftwareList` arrays
+
 ## Disclaimer
 
 This script is provided as-is. Use at your own risk. Make sure you review and understand the script before running it on your system.
 
+Always review scripts from the internet before running them. You can inspect the script at:
+[windows.ps1](https://github.com/subhadip6869/install_required_apps/blob/main/windows.ps1)
+
 ---
 
-**Author:** [subhadip6869](https://github.com/subhadip6869)
+**Author:** [subhadip6869](https://github.com/subhadip6869) | **License:** [MIT License](LICENSE)
