@@ -171,6 +171,21 @@ $wingetList = @(
     }
 )
 
+$archievedSoftwareList = @(
+    @{
+        Name         = "Flutter SDK"
+        Url          = "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.32.8-stable.zip"
+        DownloadPath = "$env:TEMP\flutter.zip"
+        InstallPath  = "C:\"
+        BinDirectory = "C:\flutter\bin"
+        Group        = "dev"
+        PostInstall  = {
+            Write-Host "Checking for upgrade..."
+            Invoke-PowerShellProcess -Command "flutter upgrade --force"
+        }
+    }
+)
+
 function Install-Softwares($selectedGroup) {
     # ----- Main script starts here -----
     Write-Host "Starting installation of software for group: $selectedGroup"
@@ -178,13 +193,10 @@ function Install-Softwares($selectedGroup) {
         if ($app.Group.Split("|") -contains $selectedGroup -or $app.Group.Split("|") -contains "common") {
             try {
                 Write-Host "Downloading $($app.Name) from $($app.Url) ..."
-                Invoke-WebRequest -Uri $app.Url -OutFile $app.InstallerPath -ErrorAction Stop
+                Start-BitsTransfer -Source $app.Url -Destination $app.InstallerPath
 
                 Write-Host "Installing $($app.Name) silently with options: $($app.Arguments)"
                 Start-Process -FilePath $app.InstallerPath -ArgumentList $app.Arguments -Wait -ErrorAction Stop
-
-                Write-Host "Cleaning up installer for $($app.Name)..."
-                Remove-Item -Path $app.InstallerPath -Force -ErrorAction SilentlyContinue
 
                 # Run optional post-install scriptblock if defined
                 if ($null -ne $app.PostInstall) {
@@ -192,18 +204,20 @@ function Install-Softwares($selectedGroup) {
                     & $app.PostInstall
                 }
 
-                Write-Host "$($app.Name) installed successfully.`n"
+                Write-Host "$($app.Name) installed successfully."
             }
             catch {
                 Write-Warning "An error occurred during the process for $($app.Name): $_"
+            }
+            finally {
                 # Optional: Cleanup in case of partial download or install
                 if (Test-Path $app.InstallerPath) {
                     try {
                         Remove-Item -Path $app.InstallerPath -Force -ErrorAction SilentlyContinue
-                        Write-Host "Cleaned up installer file for $($app.Name) after error."
+                        Write-Host "Cleaned up installer file for $($app.Name)`n"
                     }
                     catch {
-                        Write-Warning "Could not remove installer file for $($app.Name): $_"
+                        Write-Warning "Could not remove installer file for $($app.Name): $_`n"
                     }
                 }
                 # Continue with next software
@@ -224,7 +238,48 @@ function Install-Softwares($selectedGroup) {
                 Write-Host "$($wingetApp.Name) installed successfully.`n"
             }
             catch {
-                Write-Warning "An error occurred during winget install for $($wingetApp.Name): $_"
+                Write-Warning "An error occurred during winget install for $($wingetApp.Name): $_`n"
+            }
+        }
+    }
+
+    foreach ($archieveApp in $archievedSoftwareList) {
+        if ($archieveApp.Group.Split("|") -contains $selectedGroup -or $archieveApp.Group.Split("|") -contains "common") {
+            try {
+                Write-Host "Downloading $($archieveApp.Name) from $($archieveApp.Url) ..."
+                Start-BitsTransfer -Source $archieveApp.Url -Destination $archieveApp.DownloadPath
+
+                Write-Host "Extracting $($archieveApp.Name) to $($archieveApp.InstallPath)..."
+                if (-not (Test-Path $archieveApp.InstallPath)) {
+                    New-Item -ItemType Directory -Path $archieveApp.InstallPath -Force | Out-Null
+                }
+                Expand-Archive -Path $archieveApp.DownloadPath -DestinationPath $archieveApp.InstallPath -Force -ErrorAction Stop
+
+                Write-Host "Adding $($archieveApp.BinDirectory) to system PATH..."
+                Add-ToSystemPath $archieveApp.BinDirectory
+
+                # Run optional post-install scriptblock if defined
+                if ($null -ne $archieveApp.PostInstall) {
+                    Write-Host "Running post-install actions for $($archieveApp.Name)..."
+                    & $archieveApp.PostInstall
+                }
+
+                Write-Host "$($archieveApp.Name) installed successfully."
+            }
+            catch {
+                Write-Warning "An error occurred during the process for $($archieveApp.Name): $_"
+            }
+            finally {
+                # Optional: Cleanup in case of partial download or install
+                if (Test-Path $archieveApp.DownloadPath) {
+                    try {
+                        Remove-Item -Path $archieveApp.DownloadPath -Force -ErrorAction SilentlyContinue
+                        Write-Host "Cleaned up archive file for $($archieveApp.Name)`n"
+                    }
+                    catch {
+                        Write-Warning "Could not remove archive file for $($archieveApp.Name): $_`n"
+                    }
+                }
             }
         }
     }
