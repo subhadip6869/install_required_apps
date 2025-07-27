@@ -1,8 +1,10 @@
 # Check for Administrator privileges and re-launch as admin if needed
+# Improved admin elevation block for irm | iex scenarios
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
     Write-Host "Requesting Administrator privileges..."
-    # Relaunch this script as administrator with -NoExit to keep the window open after execution
-    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    $scriptContent = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/subhadip6869/install_required_apps/main/windows.ps1").Content
+    $encodedCommand = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($scriptContent))
+    Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -EncodedCommand $encodedCommand"
     exit
 }
 
