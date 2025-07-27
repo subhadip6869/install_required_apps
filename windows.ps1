@@ -106,6 +106,16 @@ $softwareList = @(
 # Separate array for winget installs
 $wingetList = @(
     @{
+        Id    = "Microsoft.WindowsTerminal"
+        Name  = "Windows Terminal"
+        Group = "common"
+    },
+    @{
+        Id    = "Microsoft.OneDrive"
+        Name  = "OneDrive"
+        Group = "common"
+    },
+    @{
         Id          = "Git.Git"
         Name        = "Git for Windows"
         Group       = "common"
